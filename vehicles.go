@@ -20,9 +20,7 @@ type Vehicle struct {
 
 // ProductVehicleResponse Contains the response data from a Product Vehicle match
 type ProductVehicleResponse struct {
-	Result   int       `json:"Result"`
-	Error    int       `json:"Error"`
-	Message  string    `json:"Message"`
+	RequestResult
 	Vehicles []Vehicle `json:"Vehicles"`
 }
 
@@ -35,9 +33,7 @@ type Fitment struct {
 
 // FitmentResponse The response returned from a vehicle match (MatchFitment) query
 type FitmentResponse struct {
-	Resut    int       `json:"Result"`
-	Error    int       `json:"Error"`
-	Message  string    `json:"Message"`
+	RequestResult
 	Fitments []Fitment `json:"PartNumbers"`
 }
 
@@ -52,7 +48,7 @@ func GetVehiclesByProduct(c Config, productID string) (*ProductVehicleResponse, 
 
 	resp, err := http.Get(
 		fmt.Sprintf(
-			"%s/ap-ar-vehicle-parts.cfm?%s",
+			"%s?%s",
 			c.Domain,
 			vals.Encode(),
 		),
@@ -65,8 +61,11 @@ func GetVehiclesByProduct(c Config, productID string) (*ProductVehicleResponse, 
 	defer resp.Body.Close()
 	var pv ProductVehicleResponse
 	err = json.NewDecoder(resp.Body).Decode(&pv)
+	if err != nil {
+		return nil, err
+	}
 
-	return &pv, err
+	return &pv, pv.Verify()
 }
 
 // MatchFitment Returns a mapped response of Products that do or do not fit the
@@ -82,7 +81,7 @@ func MatchFitment(c Config, vehicleID int, productIDs ...string) (*FitmentRespon
 
 	resp, err := http.Get(
 		fmt.Sprintf(
-			"%s/ap-ar-vehicle-parts.cfm?%s",
+			"%s?%s",
 			c.Domain,
 			vals.Encode(),
 		),
@@ -95,6 +94,9 @@ func MatchFitment(c Config, vehicleID int, productIDs ...string) (*FitmentRespon
 	defer resp.Body.Close()
 	var f FitmentResponse
 	err = json.NewDecoder(resp.Body).Decode(&f)
+	if err != nil {
+		return nil, err
+	}
 
-	return &f, err
+	return &f, f.Verify()
 }

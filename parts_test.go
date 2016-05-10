@@ -13,6 +13,12 @@ func TestGetVehicleProducts(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	c.Domain = "http://www.google.com"
+	_, err = GetVehicleProducts(c, 5460)
+	if err == nil {
+		t.Fatal(err)
+	}
+
 	c.Domain = tmp
 
 	vp, err := GetVehicleProducts(c, 5460)
@@ -30,6 +36,12 @@ func TestNoFitment(t *testing.T) {
 	tmp := c.Domain
 	c.Domain = ""
 	_, err := NoFitment(c)
+	if err == nil {
+		t.Fatal(err)
+	}
+
+	c.Domain = "http://www.google.com"
+	_, err = NoFitment(c)
 	if err == nil {
 		t.Fatal(err)
 	}

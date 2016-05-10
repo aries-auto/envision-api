@@ -13,6 +13,12 @@ func TestGetVehiclesByProduct(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	c.Domain = "http://www.google.com"
+	_, err = GetVehiclesByProduct(c, "203001")
+	if err == nil {
+		t.Fatal(err)
+	}
+
 	c.Domain = tmp
 
 	pv, err := GetVehiclesByProduct(c, "203001")
@@ -30,6 +36,12 @@ func TestMatchFitment(t *testing.T) {
 	tmp := c.Domain
 	c.Domain = ""
 	_, err := MatchFitment(c, 5460, "203001", "1042")
+	if err == nil {
+		t.Fatal(err)
+	}
+
+	c.Domain = "http://www.google.com"
+	_, err = MatchFitment(c, 5460, "203001", "1042")
 	if err == nil {
 		t.Fatal(err)
 	}

@@ -15,9 +15,13 @@ type ProductNumbers struct {
 
 // VehicleProductResponse The response that is returned the from web service
 type VehicleProductResponse struct {
-	Result  int              `json:"Result"`
-	Error   int              `json:"Error"`
-	Message string           `json:"Message"`
+	RequestResult
+	Numbers []ProductNumbers `json:"PartNumbers"`
+}
+
+// NoFitmentResponse The response from a NoFitment request
+type NoFitmentResponse struct {
+	RequestResult
 	Numbers []ProductNumbers `json:"PartNumbers"`
 }
 
@@ -32,7 +36,7 @@ func GetVehicleProducts(config Config, vehicleID int) (*VehicleProductResponse, 
 
 	resp, err := http.Get(
 		fmt.Sprintf(
-			"%s/ap-ar-vehicle-parts.cfm?%s",
+			"%s?%s",
 			config.Domain,
 			vals.Encode(),
 		),
@@ -45,16 +49,11 @@ func GetVehicleProducts(config Config, vehicleID int) (*VehicleProductResponse, 
 	defer resp.Body.Close()
 	var vp VehicleProductResponse
 	err = json.NewDecoder(resp.Body).Decode(&vp)
+	if err != nil {
+		return nil, err
+	}
 
-	return &vp, err
-}
-
-// NoFitmentResponse The response from a NoFitment request
-type NoFitmentResponse struct {
-	Result  int              `json:"Result"`
-	Error   int              `json:"Error"`
-	Message string           `json:"Message"`
-	Numbers []ProductNumbers `json:"PartNumbers"`
+	return &vp, vp.Verify()
 }
 
 // NoFitment Returns a list of products that have no fitment information.
@@ -67,7 +66,7 @@ func NoFitment(config Config) (*NoFitmentResponse, error) {
 
 	resp, err := http.Get(
 		fmt.Sprintf(
-			"%s/ap-ar-vehicle-parts.cfm?%s",
+			"%s?%s",
 			config.Domain,
 			vals.Encode(),
 		),
@@ -80,6 +79,9 @@ func NoFitment(config Config) (*NoFitmentResponse, error) {
 	defer resp.Body.Close()
 	var nf NoFitmentResponse
 	err = json.NewDecoder(resp.Body).Decode(&nf)
+	if err != nil {
+		return nil, err
+	}
 
-	return &nf, err
+	return &nf, nf.Verify()
 }
