@@ -55,3 +55,30 @@ func TestNoFitment(t *testing.T) {
 		t.Fatal("NoFitmentResponse should not be nil")
 	}
 }
+
+func TestGetLayers(t *testing.T) {
+
+	c := testConfigEnv()
+
+	tmp := c.Domain
+	c.Domain = ""
+	_, err := GetLayers(c, "", "")
+	if err == nil {
+		t.Fatal(err)
+	}
+
+	c.Domain = "http://www.google.com"
+	_, err = GetLayers(c, "", "")
+	if err == nil {
+		t.Fatal(err)
+	}
+
+	c.Domain = tmp
+
+	lr, err := GetLayers(c, "", "")
+	if err != nil {
+		t.Fatal(err)
+	} else if lr == nil {
+		t.Fatal("LayersResponse should not be nil")
+	}
+}
