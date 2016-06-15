@@ -16,6 +16,7 @@ type Vehicle struct {
 	Make     string `json:"strMake"`
 	Model    string `json:"strModel"`
 	BodyType string `json:"strBodyType"`
+	ImageURL string `json:"strImageURL"`
 }
 
 // ProductVehicleResponse Contains the response data from a Product Vehicle match
@@ -93,6 +94,38 @@ func MatchFitment(c Config, vehicleID int, productIDs ...string) (*FitmentRespon
 
 	defer resp.Body.Close()
 	var f FitmentResponse
+	err = json.NewDecoder(resp.Body).Decode(&f)
+	if err != nil {
+		return nil, err
+	}
+
+	return &f, f.Verify()
+}
+
+// GetVehicleByYearMakeModel Returns the Vehicle(s) that match a given year, make, and model
+func GetVehicleByYearMakeModel(c Config, yearStr, makeStr, modelStr string) (*ProductVehicleResponse, error) {
+	vals := url.Values{}
+	vals.Add("l", c.Login)
+	vals.Add("p", c.Password)
+	vals.Add("fnct", "VI")
+	vals.Add("year", yearStr)
+	vals.Add("make", makeStr)
+	vals.Add("model", modelStr)
+
+	resp, err := http.Get(
+		fmt.Sprintf(
+			"%s?%s",
+			c.Domain,
+			vals.Encode(),
+		),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	var f ProductVehicleResponse
 	err = json.NewDecoder(resp.Body).Decode(&f)
 	if err != nil {
 		return nil, err

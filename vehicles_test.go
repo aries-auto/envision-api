@@ -55,3 +55,30 @@ func TestMatchFitment(t *testing.T) {
 		t.Fatal("FitmentResponse should not be nil")
 	}
 }
+
+func TestYearMakeModel(t *testing.T) {
+	c := testConfigEnv()
+	yearStr := "1996"
+	makeStr := "JEEP"
+	modelStr := "GRAND CHEROKEE"
+	tmp := c.Domain
+	c.Domain = ""
+	_, err := GetVehicleByYearMakeModel(c, yearStr, makeStr, modelStr)
+	if err == nil {
+		t.Fatal(err)
+	}
+
+	c.Domain = "http://www.google.com"
+	_, err = GetVehicleByYearMakeModel(c, yearStr, makeStr, modelStr)
+	if err == nil {
+		t.Fatal(err)
+	}
+
+	c.Domain = tmp
+	f, err := GetVehicleByYearMakeModel(c, yearStr, makeStr, modelStr)
+	if err != nil {
+		t.Fatal(err)
+	} else if f == nil {
+		t.Fatal("ProductReponse should not be nil")
+	}
+}
