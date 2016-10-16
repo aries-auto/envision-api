@@ -6,20 +6,20 @@ func TestGetVehicleProducts(t *testing.T) {
 
 	c := testConfigEnv()
 
-	tmp := c.Domain
-	c.Domain = ""
+	tmp := c.VehicleDomain
+	c.VehicleDomain = ""
 	_, err := GetVehicleProducts(c, 5460)
 	if err == nil {
 		t.Fatal(err)
 	}
 
-	c.Domain = "http://www.google.com"
+	c.VehicleDomain = "http://www.google.com"
 	_, err = GetVehicleProducts(c, 5460)
 	if err == nil {
 		t.Fatal(err)
 	}
 
-	c.Domain = tmp
+	c.VehicleDomain = tmp
 
 	vp, err := GetVehicleProducts(c, 5460)
 	if err != nil {
@@ -33,20 +33,20 @@ func TestNoFitment(t *testing.T) {
 
 	c := testConfigEnv()
 
-	tmp := c.Domain
-	c.Domain = ""
+	tmp := c.VehicleDomain
+	c.VehicleDomain = ""
 	_, err := NoFitment(c)
 	if err == nil {
 		t.Fatal(err)
 	}
 
-	c.Domain = "http://www.google.com"
+	c.VehicleDomain = "http://www.google.com"
 	_, err = NoFitment(c)
 	if err == nil {
 		t.Fatal(err)
 	}
 
-	c.Domain = tmp
+	c.VehicleDomain = tmp
 
 	nf, err := NoFitment(c)
 	if err != nil {
@@ -60,20 +60,20 @@ func TestGetLayers(t *testing.T) {
 
 	c := testConfigEnv()
 
-	tmp := c.Domain
-	c.Domain = ""
+	tmp := c.VehicleDomain
+	c.VehicleDomain = ""
 	_, err := GetLayers(c, "", "")
 	if err == nil {
 		t.Fatal(err)
 	}
 
-	c.Domain = "http://www.google.com"
+	c.VehicleDomain = "http://www.google.com"
 	_, err = GetLayers(c, "", "")
 	if err == nil {
 		t.Fatal(err)
 	}
 
-	c.Domain = tmp
+	c.VehicleDomain = tmp
 
 	lr, err := GetLayers(c, "", "")
 	if err != nil {

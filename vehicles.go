@@ -19,10 +19,38 @@ type Vehicle struct {
 	ImageURL string `json:"strImageURL"`
 }
 
+// IconImage represents the iConMedia image object definition.
+type IconImage struct {
+	Source           string   `json:"src"`
+	ColorIdentifiers []int    `json:"colorID"`
+	ColorNames       []string `json:"colorName"`
+	ColorSwatches    []string `json:"colorImage"`
+}
+
+type ColorOption struct {
+	Identifier int    `json:"id"`
+	Name       string `json:"name"`
+	// images.iconfigurators.com/images/vehicles/colors/swatch/4852B645AF3C17B97022BA58A5AF6E1F.png
+	Image *url.URL `json:"swatch"`
+}
+
+// Image defines the returned image response after some re-organizing of
+// the iConMedia response.
+type Image struct {
+	Source       *url.URL      `json:"source"`
+	ColorOptions []ColorOption `json:"colors"`
+}
+
 // ProductVehicleResponse Contains the response data from a Product Vehicle match
 type ProductVehicleResponse struct {
 	RequestResult
 	Vehicles []Vehicle `json:"Vehicles"`
+}
+
+type VehicleImageResponse struct {
+	RequestResult
+	IconImages []IconImage `json:"img,omitempty"`
+	Images     []Image     `json:"images,omitempty"`
 }
 
 // Fitment Determines if a product (Number) matches a queried Vehicle. If
@@ -50,7 +78,7 @@ func GetVehiclesByProduct(c Config, productID string) (*ProductVehicleResponse, 
 	resp, err := http.Get(
 		fmt.Sprintf(
 			"%s?%s",
-			c.Domain,
+			c.VehicleDomain,
 			vals.Encode(),
 		),
 	)
@@ -83,7 +111,7 @@ func MatchFitment(c Config, vehicleID int, productIDs ...string) (*FitmentRespon
 	resp, err := http.Get(
 		fmt.Sprintf(
 			"%s?%s",
-			c.Domain,
+			c.VehicleDomain,
 			vals.Encode(),
 		),
 	)
@@ -115,7 +143,7 @@ func GetVehicleByYearMakeModel(c Config, yearStr, makeStr, modelStr string) (*Pr
 	resp, err := http.Get(
 		fmt.Sprintf(
 			"%s?%s",
-			c.Domain,
+			c.VehicleDomain,
 			vals.Encode(),
 		),
 	)
@@ -132,4 +160,78 @@ func GetVehicleByYearMakeModel(c Config, yearStr, makeStr, modelStr string) (*Pr
 	}
 
 	return &f, f.Verify()
+}
+
+// GetVehicleImage returns the an image that works with the provided
+// vehicle, color, and SKU mapping.
+func GetVehicleImage(c Config, vehicleID string, colorID string, skus []string) (*VehicleImageResponse, error) {
+	vals := url.Values{}
+	vals.Add("usejson", "1")
+	vals.Add("uid", c.UserID)
+	vals.Add("vehicle", vehicleID)
+	vals.Add("part", strings.Join(skus, ","))
+	vals.Add("colorID", colorID)
+
+	resp, err := http.Get(
+		fmt.Sprintf(
+			"%s?%s",
+			c.ImageDomain,
+			vals.Encode(),
+		),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	var i VehicleImageResponse
+	err = json.NewDecoder(resp.Body).Decode(&i)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, iconImg := range i.IconImages {
+		var img *Image
+		img, err = iconImg.transform(c)
+		if err != nil || img == nil {
+			continue
+		}
+
+		i.Images = append(i.Images, *img)
+	}
+
+	return &i, i.Verify()
+}
+
+func (i IconImage) transform(c Config) (*Image, error) {
+	var img Image
+	var err error
+
+	img.Source, err = url.Parse(i.Source)
+	if err != nil {
+		return nil, err
+	}
+
+	for iter, _ := range i.ColorIdentifiers {
+		ci := ColorOption{
+			Identifier: i.ColorIdentifiers[iter],
+			Name:       i.ColorNames[iter],
+		}
+
+		ci.Image, err = url.Parse(
+			fmt.Sprintf(
+				"%s/%s",
+				c.SwatchDomain,
+				i.ColorSwatches[iter],
+			),
+		)
+		if err != nil {
+			continue
+		}
+
+		img.ColorOptions = append(img.ColorOptions, ci)
+	}
+
+	return &img, nil
 }
