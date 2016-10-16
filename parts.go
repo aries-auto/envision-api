@@ -53,7 +53,7 @@ func GetVehicleProducts(config Config, vehicleID int) (*VehicleProductResponse, 
 	resp, err := http.Get(
 		fmt.Sprintf(
 			"%s?%s",
-			config.Domain,
+			config.VehicleDomain,
 			vals.Encode(),
 		),
 	)
@@ -83,7 +83,7 @@ func NoFitment(config Config) (*NoFitmentResponse, error) {
 	resp, err := http.Get(
 		fmt.Sprintf(
 			"%s?%s",
-			config.Domain,
+			config.VehicleDomain,
 			vals.Encode(),
 		),
 	)
@@ -115,7 +115,7 @@ func GetLayers(config Config, vehicleID string, parts ...string) (*LayersRespons
 	resp, err := http.Get(
 		fmt.Sprintf(
 			"%s?%s",
-			config.Domain,
+			config.VehicleDomain,
 			vals.Encode(),
 		),
 	)
