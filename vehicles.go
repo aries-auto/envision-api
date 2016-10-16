@@ -202,6 +202,7 @@ func GetVehicleImage(c Config, vehicleID string, colorID string, skus []string) 
 
 		i.Images = append(i.Images, *img)
 	}
+	i.IconImages = nil
 
 	return &i, i.Verify()
 }
