@@ -104,18 +104,33 @@ func TestVehicleImage(t *testing.T) {
 
 	c.ImageDomain = tmp
 
-	tmp = c.SwatchDomain
-	c.SwatchDomain = ""
-	img, err = GetVehicleImage(c, vehicleID, colorID, skus)
-	if err != nil || (len(img.IconImages) > 0 && len(img.IconImages[0].ColorNames) > 0) {
+	f, err := GetVehicleByYearMakeModel(c, "2010", "Ford", "F-150")
+	if err != nil || f == nil || len(f.Vehicles) == 0 {
 		t.Fatal(err)
+	}
+
+	tmp = c.SwatchDomain
+	c.SwatchDomain = "http://[fe80::%31%25en0]/"
+	_, err = GetVehicleImage(c, f.Vehicles[0].ID, colorID, skus)
+	if err != nil {
+		t.Fatal("shouldn't fail on bad swatch")
 	}
 	c.SwatchDomain = tmp
 
-	img, err = GetVehicleImage(c, vehicleID, colorID, skus)
+	img, err = GetVehicleImage(c, f.Vehicles[0].ID, colorID, skus)
 	if err != nil {
 		t.Fatal(err)
 	} else if img == nil {
 		t.Fatal("VehicleImageResponse should not be nil")
+	}
+}
+
+func TestTransform(t *testing.T) {
+	i := IconImage{
+		Source: "http://[fe80::%31%25en0]/img.jpg",
+	}
+	_, err := i.transform(Config{})
+	if err == nil {
+		t.Fatal("should throw error with bad source")
 	}
 }

@@ -27,11 +27,11 @@ type IconImage struct {
 	ColorSwatches    []string `json:"colorImage"`
 }
 
+// ColorOption defines the color swatch schema for a vehicle.
 type ColorOption struct {
-	Identifier int    `json:"id"`
-	Name       string `json:"name"`
-	// images.iconfigurators.com/images/vehicles/colors/swatch/4852B645AF3C17B97022BA58A5AF6E1F.png
-	Image *url.URL `json:"swatch"`
+	Identifier int      `json:"id"`
+	Name       string   `json:"name"`
+	Image      *url.URL `json:"swatch"`
 }
 
 // Image defines the returned image response after some re-organizing of
@@ -47,6 +47,8 @@ type ProductVehicleResponse struct {
 	Vehicles []Vehicle `json:"Vehicles"`
 }
 
+// VehicleImageResponse represents the visual representation of a provided
+// vehicle, color, and SKU listing.
 type VehicleImageResponse struct {
 	RequestResult
 	IconImages []IconImage `json:"img,omitempty"`
@@ -194,7 +196,7 @@ func GetVehicleImage(c Config, vehicleID string, colorID string, skus []string) 
 	for _, iconImg := range i.IconImages {
 		var img *Image
 		img, err = iconImg.transform(c)
-		if err != nil || img == nil {
+		if err != nil || img == nil || len(img.ColorOptions) == 0 {
 			continue
 		}
 
@@ -213,7 +215,7 @@ func (i IconImage) transform(c Config) (*Image, error) {
 		return nil, err
 	}
 
-	for iter, _ := range i.ColorIdentifiers {
+	for iter := range i.ColorIdentifiers {
 		ci := ColorOption{
 			Identifier: i.ColorIdentifiers[iter],
 			Name:       i.ColorNames[iter],
@@ -226,6 +228,7 @@ func (i IconImage) transform(c Config) (*Image, error) {
 				i.ColorSwatches[iter],
 			),
 		)
+
 		if err != nil {
 			continue
 		}
