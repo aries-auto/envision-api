@@ -128,7 +128,7 @@ func TestVehicleImage(t *testing.T) {
 func TestImage(t *testing.T) {
 	c := testConfigEnv()
 	// vehicleID := "0"
-	colorID := 34652
+	colorID := 0
 	skus := []string{}
 	// tmp := c.ImageDomain
 
@@ -146,10 +146,10 @@ func TestImage(t *testing.T) {
 	//
 	// c.ImageDomain = tmp
 	//
-	f, err := GetVehicleByYearMakeModel(c, "2010", "Ford", "F-150")
-	if err != nil || f == nil || len(f.Vehicles) == 0 {
-		t.Fatal(err)
-	}
+	// f, err := GetVehicleByYearMakeModel(c, "2012", "Chevrolet", "Silverado 1500")
+	// if err != nil || f == nil || len(f.Vehicles) == 0 {
+	// 	t.Fatal(err)
+	// }
 
 	// tmp = c.SwatchDomain
 	// c.SwatchDomain = "http://[fe80::%31%25en0]/"
@@ -159,7 +159,7 @@ func TestImage(t *testing.T) {
 	// }
 	// c.SwatchDomain = tmp
 
-	img, err := GetImage(c, "2010", "Ford", "F-150", colorID, skus)
+	img, err := GetImage(c, "2012", "Chevrolet", "Silverado 1500", colorID, skus)
 	t.Logf("%+v", img)
 	if err != nil {
 		t.Fatal(err)

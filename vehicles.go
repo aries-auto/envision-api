@@ -156,6 +156,8 @@ func GetImage(c Config, yearStr string, makeStr string, modelStr string, colorID
 	vehicle, allSKUS, err = getFullestVehicle(c, yearStr, makeStr, modelStr, colorID, skus)
 	if err != nil {
 		return nil, err
+	} else if vehicle == nil {
+		return nil, fmt.Errorf("no image available for %s %s %s in color %d with parts %+v", yearStr, makeStr, modelStr, colorID, skus)
 	}
 
 	imgResponse, err = GetVehicleImage(c, vehicle.ID, colorID, skus)
@@ -200,12 +202,14 @@ func getFullestVehicle(c Config, yearStr string, makeStr, modelStr string, color
 	var maxProductVehicle *IconVehicle
 	var allSKUS []string
 	for _, v := range vResponse.Vehicles {
+
 		var prodResponse *VehicleProductResponse
 		var intVehicleID int
 		intVehicleID, err = strconv.Atoi(v.ID)
 		if err != nil {
 			continue
 		}
+
 		prodResponse, err = GetVehicleProducts(c, intVehicleID)
 		if err != nil {
 			continue
@@ -230,7 +234,7 @@ func getFullestVehicle(c Config, yearStr string, makeStr, modelStr string, color
 			}
 		}
 
-		if len(prodResponse.Numbers) > max {
+		if len(prodResponse.Numbers) > max || maxProductVehicle == nil {
 			max = len(prodResponse.Numbers)
 			maxProductVehicle = &v
 		}
