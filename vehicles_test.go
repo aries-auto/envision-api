@@ -86,7 +86,7 @@ func TestYearMakeModel(t *testing.T) {
 func TestVehicleImage(t *testing.T) {
 	c := testConfigEnv()
 	vehicleID := "0"
-	colorID := "0"
+	colorID := 0
 	skus := []string{}
 	tmp := c.ImageDomain
 
@@ -118,6 +118,49 @@ func TestVehicleImage(t *testing.T) {
 	c.SwatchDomain = tmp
 
 	img, err = GetVehicleImage(c, f.Vehicles[0].ID, colorID, skus)
+	if err != nil {
+		t.Fatal(err)
+	} else if img == nil {
+		t.Fatal("VehicleImageResponse should not be nil")
+	}
+}
+
+func TestImage(t *testing.T) {
+	c := testConfigEnv()
+	// vehicleID := "0"
+	colorID := 0
+	skus := []string{}
+	// tmp := c.ImageDomain
+
+	// c.ImageDomain = ""
+	// _, err := GetImage(c, vehicleID, colorID, skus)
+	// if err == nil {
+	// 	t.Fatal(err)
+	// }
+	//
+	// c.ImageDomain = "http://www.google.com"
+	// img, err := GetVehicleImage(c, vehicleID, colorID, skus)
+	// if err == nil {
+	// 	t.Fatal(err)
+	// }
+	//
+	// c.ImageDomain = tmp
+	//
+	// f, err := GetVehicleByYearMakeModel(c, "2012", "Chevrolet", "Silverado 1500")
+	// if err != nil || f == nil || len(f.Vehicles) == 0 {
+	// 	t.Fatal(err)
+	// }
+
+	// tmp = c.SwatchDomain
+	// c.SwatchDomain = "http://[fe80::%31%25en0]/"
+	// _, err = GetVehicleImage(c, f.Vehicles[0].ID, colorID, skus)
+	// if err != nil {
+	// 	t.Fatal("shouldn't fail on bad swatch")
+	// }
+	// c.SwatchDomain = tmp
+
+	img, err := GetImage(c, "2012", "Chevrolet", "Silverado 1500", colorID, skus)
+	t.Logf("%+v", img)
 	if err != nil {
 		t.Fatal(err)
 	} else if img == nil {
