@@ -160,7 +160,6 @@ func TestImage(t *testing.T) {
 	// c.SwatchDomain = tmp
 
 	img, err := GetImage(c, "2012", "Chevrolet", "Silverado 1500", colorID, skus)
-	t.Logf("%+v", img)
 	if err != nil {
 		t.Fatal(err)
 	} else if img == nil {

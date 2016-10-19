@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"sort"
 	"strconv"
 	"strings"
 )
@@ -51,9 +50,9 @@ type Image struct {
 
 type ImageResponse struct {
 	RequestResult
-	Vehicle      Vehicle  `json:"vehicle"`
-	Image        Image    `json:"image"`
-	MappableSKUS []string `json:"mappable"`
+	Vehicle Vehicle        `json:"vehicle"`
+	Image   Image          `json:"image"`
+	Layers  []ProductLayer `json:"layers"`
 }
 
 // ProductVehicleResponse Contains the response data from a Product Vehicle match
@@ -150,6 +149,7 @@ func MatchFitment(c Config, vehicleID int, productIDs ...string) (*FitmentRespon
 func GetImage(c Config, yearStr string, makeStr string, modelStr string, colorID int, skus []string) (*ImageResponse, error) {
 	var vehicle *IconVehicle
 	var imgResponse *VehicleImageResponse
+	var resp ImageResponse
 	var allSKUS []string
 	var err error
 
@@ -159,6 +159,26 @@ func GetImage(c Config, yearStr string, makeStr string, modelStr string, colorID
 	} else if vehicle == nil {
 		return nil, fmt.Errorf("no image available for %s %s %s in color %d with parts %+v", yearStr, makeStr, modelStr, colorID, skus)
 	}
+
+	layerChan := make(chan error, 0)
+	go func() {
+
+		layerResp, e := GetLayers(c, vehicle.ID, allSKUS...)
+		if e != nil {
+			layerChan <- e
+			return
+		}
+
+		for _, l := range layerResp.Layers {
+			for _, sku := range allSKUS {
+				if strings.Compare(sku, l.ProductNumber) == 0 {
+					resp.Layers = append(resp.Layers, l)
+				}
+			}
+		}
+
+		layerChan <- nil
+	}()
 
 	imgResponse, err = GetVehicleImage(c, vehicle.ID, colorID, skus)
 	if err != nil {
@@ -173,9 +193,7 @@ func GetImage(c Config, yearStr string, makeStr string, modelStr string, colorID
 		return nil, fmt.Errorf("no image available for %s %s %s in color %d with parts %+v", yearStr, makeStr, modelStr, colorID, skus)
 	}
 
-	var resp ImageResponse
-	resp.MappableSKUS = allSKUS
-	sort.Strings(resp.MappableSKUS)
+	<-layerChan
 	resp.Image = imgResponse.Images[0]
 	resp.Vehicle = Vehicle{
 		Year:  yearStr,
