@@ -153,11 +153,25 @@ func GetImage(c Config, yearStr string, makeStr string, modelStr string, colorID
 	var allSKUS []string
 	var err error
 
-	vehicle, allSKUS, err = getFullestVehicle(c, yearStr, makeStr, modelStr, colorID, skus)
-	if err != nil {
-		return nil, err
-	} else if vehicle == nil {
-		return nil, fmt.Errorf("no image available for %s %s %s in color %d with parts %+v", yearStr, makeStr, modelStr, colorID, skus)
+	originalColor := colorID
+	originalSKUS := skus
+
+	for {
+		vehicle, allSKUS, err = getFullestVehicle(c, yearStr, makeStr, modelStr, colorID, skus)
+		if (err != nil || vehicle == nil) && (len(skus) > 0) {
+			skus = append(skus[:0], skus[1:]...)
+			continue
+		}
+		if (err != nil || vehicle == nil) && colorID > 0 {
+			colorID = 0
+			continue
+		}
+
+		if err != nil || vehicle == nil {
+			return nil, fmt.Errorf("no image available for %s %s %s in color %d with parts %+v: %+v", yearStr, makeStr, modelStr, originalColor, originalSKUS, err)
+		} else {
+			break
+		}
 	}
 
 	layerChan := make(chan error, 0)
@@ -180,21 +194,29 @@ func GetImage(c Config, yearStr string, makeStr string, modelStr string, colorID
 		layerChan <- nil
 	}()
 
-	imgResponse, err = GetVehicleImage(c, vehicle.ID, colorID, skus)
-	if err != nil {
-		// try again with no color
-		imgResponse, err = GetVehicleImage(c, vehicle.ID, 0, skus)
-		if err != nil {
-			return nil, err
+	for {
+		imgResponse, err = GetVehicleImage(c, vehicle.ID, colorID, skus)
+		if err == nil && imgResponse != nil && len(imgResponse.Images) > 0 {
+			resp.Image = imgResponse.Images[0]
+			break
+		}
+		if colorID == 0 && len(skus) == 0 {
+			break
+		}
+
+		if colorID > 0 {
+			colorID = 0
+		} else {
+			skus = append(skus[:0], skus[1:]...)
 		}
 	}
 
-	if len(imgResponse.Images) == 0 {
-		return nil, fmt.Errorf("no image available for %s %s %s in color %d with parts %+v", yearStr, makeStr, modelStr, colorID, skus)
+	<-layerChan
+
+	if resp.Image.Source == nil {
+		return nil, fmt.Errorf("no image available for %s %s %s in color %d with parts %+v %+v", yearStr, makeStr, modelStr, colorID, skus, err)
 	}
 
-	<-layerChan
-	resp.Image = imgResponse.Images[0]
 	resp.Vehicle = Vehicle{
 		Year:  yearStr,
 		Make:  makeStr,
