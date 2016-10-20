@@ -206,61 +206,6 @@ func GetImage(c Config, yearStr string, makeStr string, modelStr string, colorID
 	return &resp, nil
 }
 
-func getFullestVehicle(c Config, yearStr string, makeStr, modelStr string, colorID int, skus []string) (*IconVehicle, []string, error) {
-	var err error
-	var vResponse *ProductVehicleResponse
-
-	// get the trim options for a year/make/model
-	vResponse, err = GetVehicleByYearMakeModel(c, yearStr, makeStr, modelStr)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var max = 0
-	var maxProductVehicle *IconVehicle
-	var allSKUS []string
-	for _, v := range vResponse.Vehicles {
-
-		var prodResponse *VehicleProductResponse
-		var intVehicleID int
-		intVehicleID, err = strconv.Atoi(v.ID)
-		if err != nil {
-			continue
-		}
-
-		prodResponse, err = GetVehicleProducts(c, intVehicleID)
-		if err != nil {
-			continue
-		}
-
-		for _, pn := range prodResponse.Numbers {
-			if !contains(allSKUS, pn.Number) {
-				allSKUS = append(allSKUS, pn.Number)
-			}
-		}
-
-		if len(skus) > 0 {
-			var matched = 0
-			for _, pn := range prodResponse.Numbers {
-				if contains(skus, pn.Number) {
-					matched++
-				}
-			}
-
-			if matched != len(skus) {
-				continue
-			}
-		}
-
-		if len(prodResponse.Numbers) > max || maxProductVehicle == nil {
-			max = len(prodResponse.Numbers)
-			maxProductVehicle = &v
-		}
-	}
-
-	return maxProductVehicle, allSKUS, nil
-}
-
 // GetVehicleByYearMakeModel Returns the Vehicle(s) that match a given year, make, and model
 func GetVehicleByYearMakeModel(c Config, yearStr, makeStr, modelStr string) (*ProductVehicleResponse, error) {
 	vals := url.Values{}
