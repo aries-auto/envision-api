@@ -175,7 +175,7 @@ func GetImage(c Config, yearStr string, makeStr string, modelStr string, colorID
 	}
 
 	layerChan := make(chan error, 0)
-        defer close(layerChan)
+	defer close(layerChan)
 	go func() {
 
 		layerResp, e := GetLayers(c, vehicle.ID, allSKUS...)
